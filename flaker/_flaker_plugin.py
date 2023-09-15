@@ -1,4 +1,4 @@
-from typing import Type, Union, Set, List
+from typing import List, Set, Type, Union
 
 from vedro.core import ConfigType, Dispatcher, Plugin, PluginConfig, ScenarioScheduler
 from vedro.events import (

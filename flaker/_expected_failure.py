@@ -1,3 +1,4 @@
+import asyncio
 import re
 from functools import wraps
 from typing import Callable, Optional, Type, TypeVar
@@ -19,11 +20,14 @@ def is_expected_error(expected_error: str, actual_error: str) -> bool:
 def expected_failure(expected_error_regexp: str,
                      continue_on_error: Optional[bool] = False,
                      info_message: Optional[str] = None) -> Callable[[T], T]:
-    def decorator(func: Callable): # type: ignore
+    def decorator(func: Callable):  # type: ignore
         @wraps(func)
-        def wrapper(*args, **kwargs): # type: ignore
+        async def wrapper(*args, **kwargs):  # type: ignore
             try:
-                return func(*args, **kwargs)
+                if asyncio.iscoroutinefunction(func):
+                    return await func(*args, **kwargs)
+                else:
+                    return func(*args, **kwargs)
             except Exception as err:
                 if not is_expected_error(expected_error_regexp, str(err)):
                     raise
