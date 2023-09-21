@@ -5,7 +5,7 @@ from typing import Callable, Optional, Type, TypeVar
 
 from vedro._scenario import Scenario
 
-from ._flaky_steps_plugin import FlakyStepsPlugin, FlakyResults
+from ._flaky_steps_plugin import FlakyResults, FlakyStepsPlugin
 
 __all__ = ("expected_failure",)
 
