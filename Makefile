@@ -1,4 +1,4 @@
-PROJECT_NAME=flaker
+PROJECT_NAME=vedro_flaky_steps
 
 .PHONY: install
 install:

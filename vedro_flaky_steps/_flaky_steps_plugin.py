@@ -13,22 +13,24 @@ from vedro.events import (
     StepRunEvent,
 )
 
-from ._scheduler import FlakerScenarioScheduler
+from ._scheduler import FlakyStepsScenarioScheduler
 
-__all__ = ("Flaker", "FlakerPlugin",)
+__all__ = ("FlakySteps", "FlakyStepsPlugin",)
 
 
-class FlakerPlugin(Plugin):
-    current_step: Union[str, None] = None
-    current_scenario = None
-
+class FlakyResults:
     # Aggregation values for reporting
     scenario_failures: Set[str] = set()
     expected_errors_met: int = 0
     expected_errors_skipped: int = 0
     extra_details: List[str] = []
 
-    def __init__(self, config: Type["Flaker"]) -> None:
+
+class FlakyStepsPlugin(Plugin):
+    current_step: Union[str, None] = None
+    current_scenario = None
+
+    def __init__(self, config: Type["FlakySteps"]) -> None:
         super().__init__(config)
         self._global_config: Union[ConfigType, None] = None
         self._scheduler_factory = config.scheduler_factory
@@ -54,7 +56,7 @@ class FlakerPlugin(Plugin):
         self._global_config = event.config
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
-        group = event.arg_parser.add_argument_group("Flaker")
+        group = event.arg_parser.add_argument_group("FlakySteps")
         group.add_argument("--reruns", type=int, default=0,
                            help="Number of times to rerun failed scenarios (default: 0)")
 
@@ -70,15 +72,15 @@ class FlakerPlugin(Plugin):
         self._scheduler = event.scheduler
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
-        FlakerPlugin.current_scenario = event.scenario_result
-        setattr(FlakerPlugin.current_scenario, "__flaker__has_expected_failure__", False)
-        FlakerPlugin.extra_details = []
+        FlakyStepsPlugin.current_scenario = event.scenario_result
+        setattr(FlakyStepsPlugin.current_scenario, "__vedro_flaky_steps__has_expected_failure__", False)
+        FlakyResults.extra_details = []
 
     def on_step_run(self, event: StepRunEvent) -> None:
-        FlakerPlugin.current_step = event.step_result.step_name
+        FlakyStepsPlugin.current_step = event.step_result.step_name
 
     def on_scenario_end(self, event: Union[ScenarioPassedEvent, ScenarioFailedEvent]) -> None:
-        for extra in FlakerPlugin.extra_details:
+        for extra in FlakyResults.extra_details:
             event.scenario_result.add_extra_details(extra)
 
         if self._reruns == 0:
@@ -89,7 +91,7 @@ class FlakerPlugin(Plugin):
 
         self._rerun_scenario_id = event.scenario_result.scenario.unique_id
         has_expected_failure = \
-            getattr(event.scenario_result, "__flaker__has_expected_failure__", False)
+            getattr(event.scenario_result, "__vedro_flaky_steps__has_expected_failure__", False)
         if event.scenario_result.is_failed() and not has_expected_failure:
             self._reran += 1
             for _ in range(self._reruns):
@@ -102,18 +104,18 @@ class FlakerPlugin(Plugin):
             ts = "" if self._times == 1 else "s"
             event.report.add_summary(f"rerun {self._reran} scenario{ss}, {self._times} time{ts}")
 
-        if FlakerPlugin.expected_errors_met == 0:
+        if FlakyResults.expected_errors_met == 0:
             return
 
-        msg = f"{FlakerPlugin.expected_errors_met} expected errors met in "\
-              f"{len(FlakerPlugin.scenario_failures)} scenarios, "\
-              f"{FlakerPlugin.expected_errors_skipped} errors skipped"
+        msg = f"{FlakyResults.expected_errors_met} expected errors met in "\
+              f"{len(FlakyResults.scenario_failures)} scenarios, "\
+              f"{FlakyResults.expected_errors_skipped} errors skipped"
         event.report.add_summary(msg)
 
 
-class Flaker(PluginConfig):
-    plugin = FlakerPlugin
+class FlakySteps(PluginConfig):
+    plugin = FlakyStepsPlugin
     description = "Mark expected errors in test steps"
 
     # Scheduler that will be used to create aggregated result for flaky scenarios
-    scheduler_factory: Type[ScenarioScheduler] = FlakerScenarioScheduler
+    scheduler_factory: Type[ScenarioScheduler] = FlakyStepsScenarioScheduler

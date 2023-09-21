@@ -12,18 +12,18 @@ def find_dev_required():
 
 
 setup(
-    name="vedro-flaker",
+    name="vedro-flaky-steps",
     version="0.0.1",
-    description="Flaker plugin for vedro framework",
+    description="vedro-flaky-steps plugin for vedro framework",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     author="Bogdan Polianok",
     author_email="miner34006@gmail.com",
     python_requires=">=3.7",
-    url="https://github.com/miner34006/vedro-flaker",
+    url="https://github.com/miner34006/vedro-flaky-steps",
     license="Apache-2.0",
     packages=find_packages(exclude=["tests", "tests.*"]),
-    package_data={"flaker": ["py.typed"]},
+    package_data={"vedro_flaky_steps": ["py.typed"]},
     install_requires=find_required(),
     tests_require=find_dev_required(),
     classifiers=[

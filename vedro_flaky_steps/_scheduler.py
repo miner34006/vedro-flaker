@@ -2,16 +2,16 @@ from typing import List
 
 from vedro.core import AggregatedResult, MonotonicScenarioScheduler, ScenarioResult
 
-__all__ = ("FlakerScenarioScheduler",)
+__all__ = ("FlakyStepsScenarioScheduler",)
 
 
-class FlakerScenarioScheduler(MonotonicScenarioScheduler):
+class FlakyStepsScenarioScheduler(MonotonicScenarioScheduler):
     def aggregate_results(self, scenario_results: List[ScenarioResult]) -> AggregatedResult:
         assert len(scenario_results) > 0
 
         for scenario_result in scenario_results:
             has_expected_failure = getattr(scenario_result,
-                                           "__flaker__has_expected_failure__", False)
+                                           "__vedro_flaky_steps__has_expected_failure__", False)
             if scenario_result.is_failed() and has_expected_failure:
                 scenario_result.mark_passed()
 
