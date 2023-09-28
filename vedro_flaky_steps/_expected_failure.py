@@ -30,6 +30,8 @@ def expected_failure(expected_error_regexp: str, *,
                 else:
                     return func(*args, **kwargs)
             except Exception as err:
+                if not FlakyStepsPlugin.is_enabled:
+                    raise
                 if not is_expected_error(expected_error_regexp, str(err)):
                     raise
 
