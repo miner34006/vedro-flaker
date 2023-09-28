@@ -29,6 +29,7 @@ class FlakyResults:
 class FlakyStepsPlugin(Plugin):
     current_step: Union[str, None] = None
     current_scenario = None
+    is_enabled = False
 
     def __init__(self, config: Type["FlakySteps"]) -> None:
         super().__init__(config)
@@ -53,6 +54,7 @@ class FlakyStepsPlugin(Plugin):
             .listen(ScenarioFailedEvent, self.on_scenario_end)
 
     def on_config_loaded(self, event: ConfigLoadedEvent) -> None:
+        FlakyStepsPlugin.is_enabled = True
         self._global_config = event.config
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
