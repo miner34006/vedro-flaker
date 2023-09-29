@@ -2,12 +2,22 @@
 
 ## How to install?
 
-To install manually, follow these steps:
+To install plugin, follow these steps:
 
-1. Install the package using pip:
+Using pip:
 
 ```shell
-$ pip3 install git+git+https://github.com/miner34006/vedro-flaky-steps@main
+$ pip install git+https://github.com/miner34006/vedro-flaky-steps@main
+
+OR
+
+$ pip install vedro-flaky-steps
+```
+
+Using Vedro plugin manager:
+
+```shell
+$ vedro plugin install vedro-allure-reporter
 ```
 
 ## How to use?
