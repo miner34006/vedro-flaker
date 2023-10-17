@@ -7,9 +7,7 @@ from vedro.core import AggregatedResult, MonotonicScenarioScheduler, ScenarioRes
 
 from vedro_flaky_steps import FlakyStepsScenarioScheduler as Scheduler
 
-from ._utils import make_scenario_result, scheduler
-
-__all__ = ("scheduler")  # fixtures
+from .conftest import make_scenario_result
 
 
 def test_inheritance(scheduler: Scheduler):
