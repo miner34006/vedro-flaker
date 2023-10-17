@@ -85,8 +85,8 @@ def make_config() -> ConfigType:
 
 
 async def fire_arg_parsed_event(dispatcher: Dispatcher, reruns: int,
-                                add_allure_flaky: bool = False,
-                                flaky_tag: str = 'flaky') -> None:
+                                add_allure_tag: bool = False,
+                                allure_flaky_tag: str = 'flaky') -> None:
     config_loaded_event = ConfigLoadedEvent(Path(), make_config())
     await dispatcher.fire(config_loaded_event)
 
@@ -94,8 +94,8 @@ async def fire_arg_parsed_event(dispatcher: Dispatcher, reruns: int,
     await dispatcher.fire(arg_parse_event)
 
     arg_parsed_event = ArgParsedEvent(Namespace(reruns=reruns,
-                                                add_allure_flaky=add_allure_flaky,
-                                                flaky_tag=flaky_tag))
+                                                add_allure_tag=add_allure_tag,
+                                                allure_flaky_tag=allure_flaky_tag))
     await dispatcher.fire(arg_parsed_event)
 
 

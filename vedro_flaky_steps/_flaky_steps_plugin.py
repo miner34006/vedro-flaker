@@ -39,8 +39,8 @@ class FlakyStepsPlugin(Plugin):
         self._scheduler_factory = config.scheduler_factory
         self._scheduler: Union[ScenarioScheduler, None] = None
         self._rerun_scenario_id: Union[str, None] = None
-        self._add_allure_flaky = config.add_allure_flaky
-        self._flaky_tag = config.flaky_tag
+        self._add_allure_tag = config.add_allure_tag
+        self._flaky_tag = config.allure_flaky_tag
         self._reruns: int = 0
         self._reran: int = 0
         self._times: int = 0
@@ -65,11 +65,11 @@ class FlakyStepsPlugin(Plugin):
         group = event.arg_parser.add_argument_group("FlakySteps")
         group.add_argument("--reruns", type=int, default=0,
                            help="Number of times to rerun failed scenarios (default: 0)")
-        group.add_argument("--add-allure-flaky",
+        group.add_argument("--add-allure-tag",
                            action='store_true',
-                           default=self._add_allure_flaky,
+                           default=self._add_allure_tag,
                            help="Add allure flaky tag when expected_failure is used")
-        group.add_argument("--flaky-tag",
+        group.add_argument("--allure-flaky-tag",
                            type=str,
                            default=self._flaky_tag,
                            help="Allure tag to use for flaky scenarios")
@@ -79,8 +79,8 @@ class FlakyStepsPlugin(Plugin):
         if self._reruns < 0:
             raise ValueError("--reruns must be >= 0")
 
-        self._add_allure_flaky = event.args.add_allure_flaky
-        self._flaky_tag = event.args.flaky_tag
+        self._add_allure_tag = event.args.add_allure_tag
+        self._flaky_tag = event.args.allure_flaky_tag
 
         assert self._global_config is not None  # for type checking
         self._global_config.Registry.ScenarioScheduler.register(self._scheduler_factory, self)
@@ -99,7 +99,7 @@ class FlakyStepsPlugin(Plugin):
         FlakyStepsPlugin.current_step = event.step_result.step_name
 
     def on_scenario_end(self, event: Union[ScenarioPassedEvent, ScenarioFailedEvent]) -> None:
-        if FlakyStepsPlugin.has_flaky_decorator and self._add_allure_flaky:
+        if FlakyStepsPlugin.has_flaky_decorator and self._add_allure_tag:
             self._add_flaky_tag(event.scenario_result.scenario, self._flaky_tag)
 
         for extra in FlakyResults.extra_details:
@@ -155,6 +155,6 @@ class FlakySteps(PluginConfig):
     scheduler_factory: Type[ScenarioScheduler] = FlakyStepsScenarioScheduler
 
     # Add allure flaky tag when expected_failure is used
-    add_allure_flaky = False
+    add_allure_tag = False
 
-    flaky_tag = 'flaky'
+    allure_flaky_tag = 'flaky'

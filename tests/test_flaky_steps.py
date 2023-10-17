@@ -190,7 +190,7 @@ async def test_dont_add_flaky_allure_tag_disabled(dispatcher: Dispatcher, schedu
 async def test_dont_add_flaky_allure_tag_enabled_without_flaky(dispatcher: Dispatcher,
                                                                scheduler_: Mock):
     with given:
-        await fire_arg_parsed_event(dispatcher, reruns=0, add_allure_flaky=True)
+        await fire_arg_parsed_event(dispatcher, reruns=0, add_allure_tag=True)
         await fire_startup_event(dispatcher, scheduler_)
 
         scenario_result = make_scenario_result().mark_failed()
@@ -209,7 +209,7 @@ async def test_dont_add_flaky_allure_tag_enabled_without_flaky(dispatcher: Dispa
 async def test_add_flaky_allure_tag_with_flaky(dispatcher: Dispatcher, scheduler_: Mock):
     with given:
         await fire_arg_parsed_event(dispatcher, reruns=0,
-                                    add_allure_flaky=True)
+                                    add_allure_tag=True)
         await fire_startup_event(dispatcher, scheduler_)
 
         scenario_result = make_scenario_result().mark_failed()
@@ -230,8 +230,8 @@ async def test_add_flaky_allure_tag_with_flaky_custom_tag(dispatcher: Dispatcher
                                                           scheduler_: Mock):
     with given:
         await fire_arg_parsed_event(dispatcher, reruns=0,
-                                    add_allure_flaky=True,
-                                    flaky_tag='flaky1')
+                                    add_allure_tag=True,
+                                    allure_flaky_tag='flaky1')
         await fire_startup_event(dispatcher, scheduler_)
 
         scenario_result = make_scenario_result().mark_failed()
@@ -252,7 +252,7 @@ async def test_add_flaky_allure_tag_with_flaky_several_scenarios(dispatcher: Dis
                                                                  scheduler_: Mock):
     with given:
         await fire_arg_parsed_event(dispatcher, reruns=0,
-                                    add_allure_flaky=True)
+                                    add_allure_tag=True)
         await fire_startup_event(dispatcher, scheduler_)
 
         scenario_result_1 = make_scenario_result().mark_failed()
