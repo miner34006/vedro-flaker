@@ -35,6 +35,7 @@ def dispatcher() -> Dispatcher:
 @pytest.fixture()
 def vedro_flaky_steps(dispatcher: Dispatcher) -> FlakyStepsPlugin:
     plugin = FlakyStepsPlugin(FlakySteps)
+    FlakyStepsPlugin.has_flaky_decorator = False
     plugin.subscribe(dispatcher)
     return plugin
 
@@ -83,14 +84,18 @@ def make_config() -> ConfigType:
     return TestConfig
 
 
-async def fire_arg_parsed_event(dispatcher: Dispatcher, reruns: int) -> None:
+async def fire_arg_parsed_event(dispatcher: Dispatcher, reruns: int,
+                                add_flaky_tag: bool = False,
+                                flaky_tag_name: str = 'flaky') -> None:
     config_loaded_event = ConfigLoadedEvent(Path(), make_config())
     await dispatcher.fire(config_loaded_event)
 
     arg_parse_event = ArgParseEvent(ArgumentParser())
     await dispatcher.fire(arg_parse_event)
 
-    arg_parsed_event = ArgParsedEvent(Namespace(reruns=reruns))
+    arg_parsed_event = ArgParsedEvent(Namespace(reruns=reruns,
+                                                add_flaky_tag=add_flaky_tag,
+                                                flaky_tag_name=flaky_tag_name))
     await dispatcher.fire(arg_parsed_event)
 
 

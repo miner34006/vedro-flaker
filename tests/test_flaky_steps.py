@@ -11,7 +11,9 @@ from vedro.events import (
     ScenarioSkippedEvent,
 )
 
-from ._utils import (
+from vedro_flaky_steps import FlakyStepsPlugin
+
+from .conftest import (
     dispatcher,
     fire_arg_parsed_event,
     fire_failed_event,
@@ -147,19 +149,126 @@ async def test_add_rerun_summary(dispatcher: Dispatcher, scheduler_: Mock):
         assert report.summary == [f"rerun 1 scenario, {reruns} times"]
 
 
-# @pytest.mark.asyncio
-# @pytest.mark.usefixtures(vedro_flaky_steps.__name__)
-# async def test_dont_add_rerun_summary(dispatcher: Dispatcher, scheduler_: Mock):
-#     with given:
-#         await fire_arg_parsed_event(dispatcher, reruns=0)
-#         await fire_startup_event(dispatcher, scheduler_)
-#         await fire_failed_event(dispatcher)
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(vedro_flaky_steps.__name__)
+async def test_dont_add_rerun_summary(dispatcher: Dispatcher, scheduler_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher, reruns=0)
+        await fire_startup_event(dispatcher, scheduler_)
+        await fire_failed_event(dispatcher)
 
-#         report = Report()
-#         cleanup_event = CleanupEvent(report)
+        report = Report()
+        cleanup_event = CleanupEvent(report)
 
-#     with when:
-#         await dispatcher.fire(cleanup_event)
+    with when:
+        await dispatcher.fire(cleanup_event)
 
-#     with then:
-#         assert report.summary == []
+    with then:
+        assert report.summary == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(vedro_flaky_steps.__name__)
+async def test_dont_add_flaky_allure_tag_disabled(dispatcher: Dispatcher, scheduler_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher, reruns=0)
+        await fire_startup_event(dispatcher, scheduler_)
+
+        scenario_result = make_scenario_result().mark_failed()
+        scenario_failed_event = ScenarioFailedEvent(scenario_result)
+
+    with when:
+        await dispatcher.fire(scenario_failed_event)
+
+    with then:
+        tags = getattr(scenario_result.scenario._orig_scenario, "tags", ())
+        assert tags == tuple()
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(vedro_flaky_steps.__name__)
+async def test_dont_add_flaky_allure_tag_enabled_without_flaky(dispatcher: Dispatcher,
+                                                               scheduler_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher, reruns=0, add_flaky_tag=True)
+        await fire_startup_event(dispatcher, scheduler_)
+
+        scenario_result = make_scenario_result().mark_failed()
+        scenario_failed_event = ScenarioFailedEvent(scenario_result)
+
+    with when:
+        await dispatcher.fire(scenario_failed_event)
+
+    with then:
+        tags = getattr(scenario_result.scenario._orig_scenario, "tags", ())
+        assert tags == tuple()
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(vedro_flaky_steps.__name__)
+async def test_add_flaky_allure_tag_with_flaky(dispatcher: Dispatcher, scheduler_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher, reruns=0,
+                                    add_flaky_tag=True)
+        await fire_startup_event(dispatcher, scheduler_)
+
+        scenario_result = make_scenario_result().mark_failed()
+        scenario_failed_event = ScenarioFailedEvent(scenario_result)
+        FlakyStepsPlugin.has_flaky_decorator = True
+
+    with when:
+        await dispatcher.fire(scenario_failed_event)
+
+    with then:
+        tags = getattr(scenario_result.scenario._orig_scenario, "tags", ())
+        assert tags == ('flaky',)
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(vedro_flaky_steps.__name__)
+async def test_add_flaky_allure_tag_with_flaky_custom_tag(dispatcher: Dispatcher,
+                                                          scheduler_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher, reruns=0,
+                                    add_flaky_tag=True,
+                                    flaky_tag_name='flaky1')
+        await fire_startup_event(dispatcher, scheduler_)
+
+        scenario_result = make_scenario_result().mark_failed()
+        scenario_failed_event = ScenarioFailedEvent(scenario_result)
+        FlakyStepsPlugin.has_flaky_decorator = True
+
+    with when:
+        await dispatcher.fire(scenario_failed_event)
+
+    with then:
+        tags = getattr(scenario_result.scenario._orig_scenario, "tags", ())
+        assert tags == ('flaky1',)
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(vedro_flaky_steps.__name__)
+async def test_add_flaky_allure_tag_with_flaky_several_scenarios(dispatcher: Dispatcher,
+                                                                 scheduler_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher, reruns=0,
+                                    add_flaky_tag=True)
+        await fire_startup_event(dispatcher, scheduler_)
+
+        scenario_result_1 = make_scenario_result().mark_failed()
+        scenario_result_2 = make_scenario_result().mark_passed()
+        scenario_failed_event = ScenarioFailedEvent(scenario_result_1)
+        scenario_passed_event = ScenarioPassedEvent(scenario_result_2)
+        FlakyStepsPlugin.has_flaky_decorator = True
+        await dispatcher.fire(scenario_failed_event)
+        FlakyStepsPlugin.has_flaky_decorator = False
+
+    with when:
+        await dispatcher.fire(scenario_passed_event)
+
+    with then:
+        tags = getattr(scenario_result_1.scenario._orig_scenario, "tags", ())
+        assert tags == ('flaky',)
+
+        tags = getattr(scenario_result_2.scenario._orig_scenario, "tags", ())
+        assert tags == tuple()

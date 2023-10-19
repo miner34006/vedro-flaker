@@ -1,7 +1,8 @@
 import asyncio
 import re
+from contextlib import contextmanager
 from functools import wraps
-from typing import Callable, Optional, Type, TypeVar
+from typing import Any, Callable, Optional, Type, TypeVar
 
 from vedro._scenario import Scenario
 
@@ -20,15 +21,15 @@ def is_expected_error(expected_error: str, actual_error: str) -> bool:
 
 def expected_failure(expected_error_regexp: str, *,
                      continue_on_error: Optional[bool] = False,
-                     comment : Optional[str] = None) -> Callable[[T], T]:
-    def decorator(func: Callable):  # type: ignore
-        @wraps(func)
-        async def wrapper(*args, **kwargs):  # type: ignore
+                     comment: Optional[str] = None) -> Callable[[T], T]:
+    def decorator(func: Callable) -> Callable:
+
+        @contextmanager
+        def do_wrapper_logic() -> None:
+            FlakyStepsPlugin.has_flaky_decorator = True
+
             try:
-                if asyncio.iscoroutinefunction(func):
-                    return await func(*args, **kwargs)
-                else:
-                    return func(*args, **kwargs)
+                yield
             except Exception as err:
                 if not FlakyStepsPlugin.is_enabled:
                     raise
@@ -55,5 +56,18 @@ def expected_failure(expected_error_regexp: str, *,
 
                 raise
 
-        return wrapper
+        @wraps(func)
+        def sync_wrapper(*args, **kwargs) -> Any:  # type: ignore
+            with do_wrapper_logic():
+                return func(*args, **kwargs)
+
+        @wraps(func)
+        async def async_wrapper(*args, **kwargs) -> Any:  # type: ignore
+            with do_wrapper_logic():
+                return func(*args, **kwargs)
+
+        if asyncio.iscoroutinefunction(func):
+            return async_wrapper
+        return sync_wrapper
+
     return decorator
