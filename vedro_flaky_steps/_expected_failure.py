@@ -64,7 +64,7 @@ def expected_failure(expected_error_regexp: str, *,
         @wraps(func)
         async def async_wrapper(*args, **kwargs) -> Any:  # type: ignore
             with do_wrapper_logic():
-                return func(*args, **kwargs)
+                return await func(*args, **kwargs)
 
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
