@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock, patch, AsyncMock
 
 import pytest
 from baby_steps import given, then, when
@@ -127,3 +127,18 @@ def test_function_executed_with_error_has_executed_decorator(flaker_plugin: Magi
     with then:
         assert flaker_plugin.has_flaky_decorator
         mock_step.assert_called_once()
+
+
+@patch('vedro_flaky_steps._expected_failure.FlakyStepsPlugin')
+async def test_async_function_executed_with_expected_failure(flaker_plugin: MagicMock):
+    with given:
+        error_text = 'error'
+        mock_step = AsyncMock(side_effect=Exception(error_text))
+
+    with when:
+        with pytest.raises(Exception, match=error_text):
+            await expected_failure('aaaa')(mock_step)()
+
+    with then:
+        assert flaker_plugin.has_flaky_decorator
+        mock_step.assert_awaited_once()
