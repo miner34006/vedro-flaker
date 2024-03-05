@@ -5,11 +5,6 @@ from vedro.core import AggregatedResult, MonotonicScenarioScheduler, ScenarioRes
 __all__ = ("FlakyStepsScenarioScheduler",)
 
 
-
-def create_new_scenario_result_from_exsiting(scenario_result):
-    pass
-
-
 class FlakyStepsScenarioScheduler(MonotonicScenarioScheduler):
     def aggregate_results(self, scenario_results: List[ScenarioResult]) -> AggregatedResult:
         assert len(scenario_results) > 0
