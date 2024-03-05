@@ -7,14 +7,6 @@ __all__ = ("FlakyStepsScenarioScheduler",)
 
 def create_scenario_result_from_exsiting(scenario_result: ScenarioResult) -> ScenarioResult:
     result = ScenarioResult(scenario_result.scenario)
-
-    if scenario_result.is_passed():
-        result.mark_passed()
-    elif scenario_result.is_failed():
-        result.mark_failed()
-    elif scenario_result.is_skipped():
-        result.mark_skipped()
-
     result.set_scope(scenario_result.scope)
 
     for step_result in scenario_result.step_results:
