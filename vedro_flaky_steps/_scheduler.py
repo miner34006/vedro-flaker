@@ -5,6 +5,32 @@ from vedro.core import AggregatedResult, MonotonicScenarioScheduler, ScenarioRes
 __all__ = ("FlakyStepsScenarioScheduler",)
 
 
+def create_scenario_result_from_exsiting(scenario_result: ScenarioResult) -> ScenarioResult:
+    result = ScenarioResult(scenario_result.scenario)
+
+    if scenario_result.is_passed():
+        result.mark_passed()
+    elif scenario_result.is_failed():
+        result.mark_failed()
+    elif scenario_result.is_skipped():
+        result.mark_skipped()
+
+    result.set_scope(scenario_result.scope)
+
+    for step_result in scenario_result.step_results:
+        result.add_step_result(step_result)
+
+    for artifact in scenario_result.artifacts:
+        result.attach(artifact)
+
+    for extra in scenario_result.extra_details:
+        result.add_extra_details(extra)
+
+    result.set_started_at(scenario_result.started_at)
+    result.set_ended_at(scenario_result.ended_at)
+    return result
+
+
 class FlakyStepsScenarioScheduler(MonotonicScenarioScheduler):
     def aggregate_results(self, scenario_results: List[ScenarioResult]) -> AggregatedResult:
         assert len(scenario_results) > 0
@@ -14,7 +40,7 @@ class FlakyStepsScenarioScheduler(MonotonicScenarioScheduler):
             has_expected_failure = getattr(scenario_result,
                                            "__vedro_flaky_steps__has_expected_failure__", False)
             if scenario_result.is_failed() and has_expected_failure:
-                new_result = ScenarioResult(scenario_result.scenario)
+                new_result = create_scenario_result_from_exsiting(scenario_result)
                 new_result.mark_passed()
                 new_scenario_results.append(new_result)
             else:
