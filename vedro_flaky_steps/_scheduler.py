@@ -9,17 +9,15 @@ class FlakyStepsScenarioScheduler(MonotonicScenarioScheduler):
     def aggregate_results(self, scenario_results: List[ScenarioResult]) -> AggregatedResult:
         assert len(scenario_results) > 0
 
+        passed, failed = [], []
         for scenario_result in scenario_results:
             has_expected_failure = getattr(scenario_result,
                                            "__vedro_flaky_steps__has_expected_failure__", False)
-            if scenario_result.is_failed() and has_expected_failure:
-                scenario_result.mark_passed()
+            is_passed = scenario_result.is_passed() or (scenario_result.is_failed() and has_expected_failure)
 
-        passed, failed = [], []
-        for scenario_result in scenario_results:
-            if scenario_result.is_passed():
+            if is_passed:
                 passed.append(scenario_result)
-            elif scenario_result.is_failed():
+            else:
                 failed.append(scenario_result)
 
         if len(passed) == 0 and len(failed) == 0:
