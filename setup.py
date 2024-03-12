@@ -13,7 +13,7 @@ def find_dev_required():
 
 setup(
     name="vedro-flaky-steps",
-    version="1.1.1",
+    version="1.1.2",
     description="vedro-flaky-steps plugin for vedro framework",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
