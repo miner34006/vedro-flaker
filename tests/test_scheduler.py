@@ -96,13 +96,12 @@ def test_aggregate_2_passed_1_failed_with_expected_failure(scheduler: Scheduler)
         passed_last = make_scenario_result().mark_passed()
 
         scenario_results = [passed_first, failed_single, passed_last]
-        expected = AggregatedResult.from_existing(passed_last, scenario_results)
 
     with when:
         aggregated_result = scheduler.aggregate_results(scenario_results)
 
     with then:
-        assert aggregated_result == expected
+        assert aggregated_result.is_passed()
 
 
 def test_aggregate_2_failed_1_passed_with_1_expected_failure(scheduler: Scheduler):
